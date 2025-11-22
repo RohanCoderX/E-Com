@@ -3,8 +3,6 @@ name: Deploy E-Commerce App
 on:
   push:
     branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
 
 jobs:
   deploy:
@@ -12,26 +10,31 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       
     - name: Setup Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '18'
-        cache: 'npm'
         
     - name: Install dependencies
-      run: npm ci
+      run: npm install
+      
+    - name: Install AWS CDK
+      run: npm install -g aws-cdk
       
     - name: Build project
       run: npm run build
       
     - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
+      uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-west-2
         
+    - name: Bootstrap CDK (if needed)
+      run: cdk bootstrap --require-approval never
+      
     - name: Deploy to AWS
-      run: npx cdk deploy --require-approval never
+      run: cdk deploy --require-approval never
