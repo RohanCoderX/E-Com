@@ -30,4 +30,5 @@ jobs:
         AWS_DEFAULT_REGION: us-west-2
       run: |
         npm run build
+        cdk bootstrap aws://503767747826/us-west-2 --require-approval never || true
         cdk deploy --require-approval never

@@ -9,7 +9,7 @@ const app = new cdk.App();
 // Main application stack
 new ECommerceStack(app, 'ECommerceStack', {
   env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
+    account: '503767747826',
     region: 'us-west-2',
   },
 });
@@ -17,7 +17,7 @@ new ECommerceStack(app, 'ECommerceStack', {
 // CI/CD Pipeline stack
 new PipelineStack(app, 'ECommercePipelineStack', {
   env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
+    account: '503767747826',
     region: 'us-west-2',
   },
 });

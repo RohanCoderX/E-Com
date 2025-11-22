@@ -31,4 +31,5 @@ jobs:
       run: |
         npm run build
         cdk bootstrap --require-approval never || true
+        cdk bootstrap aws://503767747826/us-west-2 --require-approval never || true
         cdk deploy --require-approval never
