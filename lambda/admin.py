@@ -18,6 +18,18 @@ def decimal_default(obj):
 def handler(event, context):
     method = event['httpMethod']
     
+    # Handle CORS preflight
+    if method == 'OPTIONS':
+        return {
+            'statusCode': 200,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type,Authorization'
+            },
+            'body': ''
+        }
+    
     try:
         if method == 'POST':
             body = json.loads(event['body'])
@@ -75,8 +87,12 @@ def handler(event, context):
             }
             
     except Exception as e:
+        print(f"Admin handler error: {str(e)}")
         return {
             'statusCode': 500,
-            'headers': {'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': str(e)})
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Content-Type': 'application/json'
+            },
+            'body': json.dumps({'error': str(e), 'success': False})
         }

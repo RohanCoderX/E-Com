@@ -246,6 +246,7 @@ export class ECommerceStack extends cdk.Stack {
     const admin = api.root.addResource('admin');
     admin.addMethod('POST', new apigateway.LambdaIntegration(adminFunction));
     admin.addMethod('GET', new apigateway.LambdaIntegration(adminFunction));
+    admin.addMethod('OPTIONS', new apigateway.LambdaIntegration(adminFunction));
 
     // Deploy Frontend
     new s3deploy.BucketDeployment(this, 'DeployWebsite', {
@@ -272,6 +273,10 @@ export class ECommerceStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, 'EmailVerifierFunction', {
       value: emailVerifier.functionName,
+    });
+
+    new cdk.CfnOutput(this, 'AdminFunction', {
+      value: adminFunction.functionName,
     });
   }
 }
