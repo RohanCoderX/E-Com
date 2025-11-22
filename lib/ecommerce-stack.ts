@@ -1,5 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
-import { aws_lambda as lambda, aws_apigateway as apigateway, aws_dynamodb as dynamodb, aws_s3 as s3, aws_s3_deployment as s3deploy, aws_ses as ses, aws_sns as sns, aws_sns_subscriptions as subscriptions, aws_iam as iam, aws_lambda_event_sources as eventsources, aws_cloudfront as cloudfront, aws_cloudfront_origins as origins } from 'aws-cdk-lib';
+import { aws_lambda as lambda, aws_apigateway as apigateway, aws_dynamodb as dynamodb, aws_s3 as s3, aws_s3_deployment as s3deploy, aws_ses as ses, aws_sns as sns, aws_sns_subscriptions as subscriptions, aws_iam as iam, aws_lambda_event_sources as eventsources } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 
 export class ECommerceStack extends cdk.Stack {
@@ -236,21 +236,8 @@ export class ECommerceStack extends cdk.Stack {
       destinationBucket: websiteBucket,
     });
 
-    // CloudFront Distribution for HTTPS (simplified)
-    const distribution = new cloudfront.Distribution(this, 'WebsiteDistribution', {
-      defaultBehavior: {
-        origin: new origins.S3Origin(websiteBucket),
-        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-      },
-      defaultRootObject: 'index.html',
-    });
-
     // Outputs
     new cdk.CfnOutput(this, 'WebsiteURL', {
-      value: `https://${distribution.distributionDomainName}`,
-    });
-
-    new cdk.CfnOutput(this, 'S3WebsiteURL', {
       value: websiteBucket.bucketWebsiteUrl,
     });
 
