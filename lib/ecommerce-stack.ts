@@ -230,28 +230,19 @@ export class ECommerceStack extends cdk.Stack {
     const userAuth = api.root.addResource('auth');
     userAuth.addMethod('POST', new apigateway.LambdaIntegration(userManager));
 
-    // CloudFront Distribution for HTTPS
-    const distribution = new cloudfront.Distribution(this, 'WebsiteDistribution', {
-      defaultBehavior: {
-        origin: new origins.S3Origin(websiteBucket),
-        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
-        cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
-      },
-      defaultRootObject: 'index.html',
-      errorResponses: [{
-        httpStatus: 404,
-        responseHttpStatus: 200,
-        responsePagePath: '/index.html',
-      }],
-    });
-
     // Deploy Frontend
     new s3deploy.BucketDeployment(this, 'DeployWebsite', {
       sources: [s3deploy.Source.asset('./frontend')],
       destinationBucket: websiteBucket,
-      distribution,
-      distributionPaths: ['/*'],
+    });
+
+    // CloudFront Distribution for HTTPS (simplified)
+    const distribution = new cloudfront.Distribution(this, 'WebsiteDistribution', {
+      defaultBehavior: {
+        origin: new origins.S3Origin(websiteBucket),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+      },
+      defaultRootObject: 'index.html',
     });
 
     // Outputs
