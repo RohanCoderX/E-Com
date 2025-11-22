@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Commerce Store</title>
+    <style>
+        :root {
+            --bg-color: #f5f5f5;
+            --card-bg: white;
+            --text-color: #333;
+            --text-secondary: #666;
+            --header-bg: #232f3e;
+            --shadow: rgba(0,0,0,0.1);
+        }
+        
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --text-color: #ffffff;
+            --text-secondary: #cccccc;
+            --header-bg: #0f1419;
+            --shadow: rgba(255,255,255,0.1);
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: var(--bg-color); color: var(--text-color); transition: all 0.3s ease; }
+        .header { background: var(--header-bg); color: white; padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
+        .header-left { display: flex; align-items: center; gap: 1rem; }
+        .header-right { display: flex; align-items: center; gap: 1rem; }
+        .theme-toggle { background: #ff9900; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+        .login-btn { background: #007bff; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
+        .product-card { background: var(--card-bg); border-radius: 8px; padding: 1rem; box-shadow: 0 2px 4px var(--shadow); }
+        .product-image { width: 100%; height: 200px; background: #ddd; border-radius: 4px; margin-bottom: 1rem; background-size: cover; background-position: center; }
+        .product-name { font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem; }
+        .product-price { font-size: 1.5rem; color: #b12704; font-weight: bold; margin-bottom: 0.5rem; }
+        .product-description { color: var(--text-secondary); margin-bottom: 1rem; }
+        .add-to-cart { background: #ff9900; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; width: 100%; }
+        .add-to-cart:hover { background: #e88900; }
+        .cart { position: fixed; top: 80px; right: 20px; background: var(--card-bg); padding: 1rem; border-radius: 8px; box-shadow: 0 2px 8px var(--shadow); min-width: 300px; }
+        .cart-item { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
+        .checkout-btn { background: #28a745; color: white; border: none; padding: 0.75rem; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 1rem; }
+        .checkout-btn:hover { background: #218838; }
+        .loading { text-align: center; padding: 2rem; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--card-bg); padding: 2rem; border-radius: 8px; width: 400px; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; }
+        .form-group input { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; background: var(--card-bg); color: var(--text-color); }
+        .btn { padding: 0.75rem 1.5rem; border: none; border-radius: 4px; cursor: pointer; margin-right: 0.5rem; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .user-info { color: white; }
+        .history-btn { background: #17a2b8; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; margin-left: 0.5rem; }
+        .history-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .history-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--card-bg); padding: 2rem; border-radius: 8px; width: 80%; max-width: 800px; max-height: 80%; overflow-y: auto; }
+        .order-item { background: var(--bg-color); padding: 1rem; margin-bottom: 1rem; border-radius: 4px; border: 1px solid var(--shadow); }
+        .order-header { display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-weight: bold; }
+        .order-details { color: var(--text-secondary); font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <h1>🛒 E-Commerce Store</h1>
+        </div>
+        <div class="header-right">
+            <span class="user-info" id="userInfo">Guest</span>
+            <button class="history-btn" id="historyBtn" onclick="showHistory()" style="display: none;">My Orders</button>
+            <button class="login-btn" id="loginBtn" onclick="showLogin()">Login</button>
+            <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="loading" class="loading">Loading products...</div>
+        <div id="products" class="products-grid" style="display: none;"></div>
+    </div>
+
+    <div class="cart" id="cart">
+        <h3>Shopping Cart</h3>
+        <div id="cart-items"></div>
+        <div id="cart-total"><strong>Total: ₹0.00</strong></div>
+        <button class="checkout-btn" onclick="checkout()">Checkout</button>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <h2>Login / Register</h2>
+            <div class="form-group">
+                <label>Name:</label>
+                <input type="text" id="userName" placeholder="Enter your name">
+            </div>
+            <div class="form-group">
+                <label>Email:</label>
+                <input type="email" id="userEmail" placeholder="Enter your email">
+            </div>
+            <div class="form-group">
+                <button class="btn btn-primary" onclick="login()">Login</button>
+                <button class="btn btn-secondary" onclick="closeLogin()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Purchase History Modal -->
+    <div class="modal history-modal" id="historyModal">
+        <div class="modal-content history-content">
+            <h2>My Purchase History</h2>
+            <div id="orderHistory">Loading...</div>
+            <div class="form-group">
+                <button class="btn btn-secondary" onclick="closeHistory()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://x59iggnoyg.execute-api.us-west-2.amazonaws.com/prod';
+        let products = [];
+        let cart = [];
+        let currentUser = null;
+
+        // Initialize theme and user on page load
+        function initializeApp() {
+            loadTheme();
+            loadUser();
+            loadProducts();
+        }
+
+        // Theme Management
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            const themeBtn = document.querySelector('.theme-toggle');
+            themeBtn.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+        }
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            
+            const themeBtn = document.querySelector('.theme-toggle');
+            themeBtn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+        }
+
+        // User Management
+        function loadUser() {
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                updateUserDisplay();
+            }
+        }
+
+        function updateUserDisplay() {
+            const userInfo = document.getElementById('userInfo');
+            const loginBtn = document.getElementById('loginBtn');
+            
+            if (currentUser) {
+                userInfo.textContent = `Hello, ${currentUser.name}`;
+                loginBtn.textContent = 'Logout';
+                loginBtn.onclick = logout;
+            } else {
+                userInfo.textContent = 'Guest';
+                loginBtn.textContent = 'Login';
+                loginBtn.onclick = showLogin;
+            }
+        }
+
+        function showLogin() {
+            document.getElementById('loginModal').style.display = 'block';
+        }
+
+        function closeLogin() {
+            document.getElementById('loginModal').style.display = 'none';
+        }
+
+        function login() {
+            const name = document.getElementById('userName').value;
+            const email = document.getElementById('userEmail').value;
+            
+            if (!name || !email) {
+                alert('Please enter both name and email');
+                return;
+            }
+            
+            currentUser = { name, email, loginTime: new Date().toISOString() };
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            updateUserDisplay();
+            closeLogin();
+            
+            // Clear form
+            document.getElementById('userName').value = '';
+            document.getElementById('userEmail').value = '';
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            updateUserDisplay();
+        }
+
+        async function loadProducts() {
+            try {
+                const response = await fetch(`${API_URL}/products`);
+                products = await response.json();
+                displayProducts();
+            } catch (error) {
+                document.getElementById('loading').innerHTML = 'Error loading products. Please try again later.';
+            }
+        }
+
+        function displayProducts() {
+            const container = document.getElementById('products');
+            const loading = document.getElementById('loading');
+            
+            container.innerHTML = products.map(product => `
+                <div class="product-card">
+                    <div class="product-image" style="background-image: url('${product.image}'); background-size: cover; background-position: center;"></div>
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-price">₹${product.price}</div>
+                    <div class="product-description">${product.description}</div>
+                    <div style="color: #666; margin-bottom: 1rem;">Stock: ${product.stock}</div>
+                    <button class="add-to-cart" onclick="addToCart('${product.productId}')">Add to Cart</button>
+                </div>
+            `).join('');
+            
+            loading.style.display = 'none';
+            container.style.display = 'grid';
+        }
+
+        function addToCart(productId) {
+            const product = products.find(p => p.productId === productId);
+            const existingItem = cart.find(item => item.productId === productId);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ ...product, quantity: 1 });
+            }
+            
+            updateCartDisplay();
+        }
+
+        function updateCartDisplay() {
+            const cartItems = document.getElementById('cart-items');
+            const cartTotal = document.getElementById('cart-total');
+            
+            cartItems.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <span>${item.name} x${item.quantity}</span>
+                    <span>₹${(item.price * item.quantity).toFixed(2)}</span>
+                </div>
+            `).join('');
+            
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            cartTotal.innerHTML = `<strong>Total: ₹${total.toFixed(2)}</strong>`;
+            
+            // Update product display with current stock
+            updateProductStock();
+        }
+
+        async function checkout() {
+            if (cart.length === 0) {
+                alert('Your cart is empty!');
+                return;
+            }
+
+            let customerName, email;
+            
+            if (currentUser) {
+                customerName = currentUser.name;
+                email = currentUser.email;
+            } else {
+                customerName = prompt('Enter your name:') || 'Guest User';
+                email = prompt('Enter your email:') || '';
+            }
+            
+            const order = {
+                customerName,
+                email,
+                items: cart.map(item => ({
+                    productId: item.productId,
+                    name: item.name,
+                    price: item.price,
+                    quantity: item.quantity
+                })),
+                total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/orders`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(order)
+                });
+                
+                const result = await response.json();
+                alert(`Order placed successfully! Order ID: ${result.orderId}`);
+                cart = [];
+                updateCartDisplay();
+                
+                // Reload products to show updated stock
+                loadProducts();
+            } catch (error) {
+                alert('Error placing order. Please try again.');
+            }
+        }
+
+        function updateProductStock() {
+            // This function will be called after cart updates
+            // Stock is updated server-side when order is placed
+        }
+
+        // Initialize app on page load
+        initializeApp();
+    </script>
+</body>
+</html>
