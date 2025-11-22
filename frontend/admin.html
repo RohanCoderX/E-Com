@@ -74,6 +74,18 @@
 
     <script>
         const API_URL = 'https://x59iggnoyg.execute-api.us-west-2.amazonaws.com/prod';
+        
+        // Check if admin API endpoint exists
+        async function checkAdminAPI() {
+            try {
+                const response = await fetch(`${API_URL}/admin`);
+                if (!response.ok) {
+                    document.getElementById('ordersBody').innerHTML = '<tr><td colspan="7">Admin API not deployed yet. Please wait for deployment to complete.</td></tr>';
+                }
+            } catch (error) {
+                document.getElementById('ordersBody').innerHTML = '<tr><td colspan="7">Admin API not available. Please check deployment.</td></tr>';
+            }
+        }
         let adminToken = null;
 
         async function adminLogin() {
