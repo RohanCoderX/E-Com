@@ -43,7 +43,10 @@ def handler(event, context):
                 if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
                     return {
                         'statusCode': 200,
-                        'headers': {'Access-Control-Allow-Origin': '*'},
+                        'headers': {
+                            'Access-Control-Allow-Origin': '*',
+                            'Content-Type': 'application/json'
+                        },
                         'body': json.dumps({
                             'success': True,
                             'message': 'Admin login successful',
@@ -53,7 +56,10 @@ def handler(event, context):
                 else:
                     return {
                         'statusCode': 401,
-                        'headers': {'Access-Control-Allow-Origin': '*'},
+                        'headers': {
+                            'Access-Control-Allow-Origin': '*',
+                            'Content-Type': 'application/json'
+                        },
                         'body': json.dumps({'success': False, 'message': 'Invalid credentials'})
                     }
             
@@ -71,7 +77,10 @@ def handler(event, context):
                 
                 return {
                     'statusCode': 200,
-                    'headers': {'Access-Control-Allow-Origin': '*'},
+                    'headers': {
+                        'Access-Control-Allow-Origin': '*',
+                        'Content-Type': 'application/json'
+                    },
                     'body': json.dumps({'success': True, 'message': 'Order status updated'})
                 }
         
@@ -82,7 +91,10 @@ def handler(event, context):
             
             return {
                 'statusCode': 200,
-                'headers': {'Access-Control-Allow-Origin': '*'},
+                'headers': {
+                    'Access-Control-Allow-Origin': '*',
+                    'Content-Type': 'application/json'
+                },
                 'body': json.dumps(orders, default=decimal_default)
             }
             
@@ -96,3 +108,13 @@ def handler(event, context):
             },
             'body': json.dumps({'error': str(e), 'success': False})
         }
+    
+    # Fallback return
+    return {
+        'statusCode': 400,
+        'headers': {
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json'
+        },
+        'body': json.dumps({'error': 'Invalid request method', 'success': False})
+    }
