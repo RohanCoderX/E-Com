@@ -37,4 +37,6 @@ jobs:
     - name: Deploy to AWS
       run: |
         cdk bootstrap aws://503767747826/us-west-2 --require-approval never || echo "Bootstrap already exists"
-        cdk deploy --require-approval never --verbose
+        cdk deploy --require-approval never --verbose --outputs-file outputs.json
+        echo "=== DEPLOYMENT OUTPUTS ==="
+        cat outputs.json || echo "No outputs file found"
