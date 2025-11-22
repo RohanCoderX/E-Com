@@ -37,8 +37,13 @@
         .product-name { font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem; }
         .product-price { font-size: 1.5rem; color: #b12704; font-weight: bold; margin-bottom: 0.5rem; }
         .product-description { color: var(--text-secondary); margin-bottom: 1rem; }
+        .quantity-controls { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
+        .quantity-btn { background: #ddd; border: none; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .quantity-btn:hover { background: #ccc; }
+        .quantity-input { width: 60px; text-align: center; border: 1px solid #ddd; border-radius: 4px; padding: 0.25rem; }
         .add-to-cart { background: #ff9900; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; width: 100%; }
         .add-to-cart:hover { background: #e88900; }
+        .add-to-cart:disabled { background: #ccc; cursor: not-allowed; }
         .cart { position: fixed; top: 80px; right: 20px; background: var(--card-bg); padding: 1rem; border-radius: 8px; box-shadow: 0 2px 8px var(--shadow); min-width: 300px; }
         .cart-item { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
         .checkout-btn { background: #28a745; color: white; border: none; padding: 0.75rem; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 1rem; }
@@ -230,7 +235,14 @@
                     <div class="product-price">₹${product.price}</div>
                     <div class="product-description">${product.description}</div>
                     <div style="color: #666; margin-bottom: 1rem;">Stock: ${product.stock}</div>
-                    <button class="add-to-cart" onclick="addToCart('${product.productId}')">Add to Cart</button>
+                    <div class="quantity-controls">
+                        <button class="quantity-btn" onclick="changeQuantity('${product.productId}', -1)">-</button>
+                        <input type="number" class="quantity-input" id="qty-${product.productId}" value="1" min="1" max="${product.stock}">
+                        <button class="quantity-btn" onclick="changeQuantity('${product.productId}', 1)">+</button>
+                    </div>
+                    <button class="add-to-cart" onclick="addToCart('${product.productId}')" ${product.stock === 0 ? 'disabled' : ''}>
+                        ${product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                    </button>
                 </div>
             `).join('');
             
@@ -238,17 +250,50 @@
             container.style.display = 'grid';
         }
 
+        function changeQuantity(productId, change) {
+            const input = document.getElementById(`qty-${productId}`);
+            const product = products.find(p => p.productId === productId);
+            let newValue = parseInt(input.value) + change;
+            
+            if (newValue < 1) newValue = 1;
+            if (newValue > product.stock) newValue = product.stock;
+            
+            input.value = newValue;
+        }
+
         function addToCart(productId) {
             const product = products.find(p => p.productId === productId);
+            const quantityInput = document.getElementById(`qty-${product.productId}`);
+            const quantity = parseInt(quantityInput.value);
+            
+            if (product.stock === 0) {
+                alert('This product is out of stock!');
+                return;
+            }
+            
+            if (quantity > product.stock) {
+                alert(`Only ${product.stock} items available in stock!`);
+                return;
+            }
+            
             const existingItem = cart.find(item => item.productId === productId);
             
             if (existingItem) {
-                existingItem.quantity += 1;
+                const totalQuantity = existingItem.quantity + quantity;
+                if (totalQuantity > product.stock) {
+                    alert(`Cannot add ${quantity} more. Only ${product.stock - existingItem.quantity} items available!`);
+                    return;
+                }
+                existingItem.quantity += quantity;
             } else {
-                cart.push({ ...product, quantity: 1 });
+                cart.push({ ...product, quantity });
             }
             
+            // Reset quantity input to 1
+            quantityInput.value = 1;
+            
             updateCartDisplay();
+            alert(`Added ${quantity} ${product.name}(s) to cart!`);
         }
 
         function updateCartDisplay() {
@@ -259,6 +304,7 @@
                 <div class="cart-item">
                     <span>${item.name} x${item.quantity}</span>
                     <span>₹${(item.price * item.quantity).toFixed(2)}</span>
+                    <button onclick="removeFromCart('${item.productId}')" style="background: #dc3545; color: white; border: none; padding: 2px 6px; border-radius: 3px; margin-left: 5px; cursor: pointer;">×</button>
                 </div>
             `).join('');
             
@@ -267,6 +313,11 @@
             
             // Update product display with current stock
             updateProductStock();
+        }
+        
+        function removeFromCart(productId) {
+            cart = cart.filter(item => item.productId !== productId);
+            updateCartDisplay();
         }
 
         async function checkout() {
