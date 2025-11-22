@@ -230,23 +230,23 @@ export class ECommerceStack extends cdk.Stack {
     const userAuth = api.root.addResource('auth');
     userAuth.addMethod('POST', new apigateway.LambdaIntegration(userManager));
 
-    // Admin Lambda
-    const adminFunction = new lambda.Function(this, 'AdminFunction', {
-      runtime: lambda.Runtime.PYTHON_3_11,
-      code: lambda.Code.fromAsset('lambda'),
-      handler: 'admin.handler',
-      environment: {
-        ORDERS_TABLE: ordersTable.tableName,
-      },
-    });
+    // Admin Lambda - Temporarily disabled
+    // const adminFunction = new lambda.Function(this, 'AdminFunction', {
+    //   runtime: lambda.Runtime.PYTHON_3_11,
+    //   code: lambda.Code.fromAsset('lambda'),
+    //   handler: 'admin.handler',
+    //   environment: {
+    //     ORDERS_TABLE: ordersTable.tableName,
+    //   },
+    // });
 
-    // Grant admin permissions
-    ordersTable.grantReadWriteData(adminFunction);
+    // // Grant admin permissions
+    // ordersTable.grantReadWriteData(adminFunction);
 
-    const admin = api.root.addResource('admin');
-    admin.addMethod('POST', new apigateway.LambdaIntegration(adminFunction));
-    admin.addMethod('GET', new apigateway.LambdaIntegration(adminFunction));
-    admin.addMethod('OPTIONS', new apigateway.LambdaIntegration(adminFunction));
+    // const admin = api.root.addResource('admin');
+    // admin.addMethod('POST', new apigateway.LambdaIntegration(adminFunction));
+    // admin.addMethod('GET', new apigateway.LambdaIntegration(adminFunction));
+    // admin.addMethod('OPTIONS', new apigateway.LambdaIntegration(adminFunction));
 
     // Deploy Frontend
     new s3deploy.BucketDeployment(this, 'DeployWebsite', {
@@ -275,8 +275,8 @@ export class ECommerceStack extends cdk.Stack {
       value: emailVerifier.functionName,
     });
 
-    new cdk.CfnOutput(this, 'AdminFunction', {
-      value: adminFunction.functionName,
-    });
+    // new cdk.CfnOutput(this, 'AdminFunction', {
+    //   value: adminFunction.functionName,
+    // });
   }
 }
