@@ -41,8 +41,10 @@ def handler(event, context):
                 'email': email,
                 'items': body['items'],
                 'total': body['total'],
-                'status': 'pending',
+                'status': 'Pending',
                 'timestamp': datetime.utcnow().isoformat(),
+                'purchaseTime': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC'),
+                'emailVerified': False,
                 'shippingAddress': body.get('shippingAddress', {})
             }
             

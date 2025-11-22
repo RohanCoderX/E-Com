@@ -390,25 +390,42 @@
                 if (orders.length === 0) {
                     historyContainer.innerHTML = '<p>No orders found.</p>';
                 } else {
-                    historyContainer.innerHTML = orders.map(order => `
+                    historyContainer.innerHTML = orders.map(order => {
+                        const orderDate = new Date(order.timestamp);
+                        const statusColor = getStatusColor(order.status);
+                        
+                        return `
                         <div class="order-item">
                             <div class="order-header">
                                 <span>Order #${order.orderId}</span>
                                 <span>₹${order.total.toFixed(2)}</span>
                             </div>
                             <div class="order-details">
-                                <p><strong>Date:</strong> ${new Date(order.timestamp).toLocaleDateString()}</p>
-                                <p><strong>Status:</strong> ${order.status || 'Confirmed'}</p>
+                                <p><strong>Purchase Date:</strong> ${orderDate.toLocaleDateString()}</p>
+                                <p><strong>Purchase Time:</strong> ${orderDate.toLocaleTimeString()}</p>
+                                <p><strong>Status:</strong> <span style="color: ${statusColor}; font-weight: bold;">${order.status || 'Pending'}</span></p>
                                 <p><strong>Items:</strong></p>
                                 <ul>
                                     ${order.items.map(item => `<li>${item.name} x${item.quantity} - ₹${(item.price * item.quantity).toFixed(2)}</li>`).join('')}
                                 </ul>
                             </div>
                         </div>
-                    `).join('');
+                    `}).join('');
                 }
             } catch (error) {
                 document.getElementById('orderHistory').innerHTML = '<p>Error loading order history. Please try again.</p>';
+            }
+        }
+        
+        function getStatusColor(status) {
+            switch(status) {
+                case 'Pending': return '#ff9900';
+                case 'Email Verified': return '#007bff';
+                case 'Processing': return '#17a2b8';
+                case 'Shipped': return '#28a745';
+                case 'Delivered': return '#28a745';
+                case 'Cancelled': return '#dc3545';
+                default: return '#6c757d';
             }
         }
         

@@ -4,6 +4,7 @@ import os
 
 ses = boto3.client('ses')
 dynamodb = boto3.resource('dynamodb')
+orders_table = dynamodb.Table('ecommerce-orders')
 
 def handler(event, context):
     try:
@@ -13,21 +14,38 @@ def handler(event, context):
                 new_image = record['dynamodb']['NewImage']
                 email = new_image.get('email', {}).get('S', '')
                 
-                if email and '@' in email:
-                    # Check if email is already verified
+                order_id = new_image.get('orderId', {}).get('S', '')
+                
+                if email and '@' in email and order_id:
                     try:
-                        response = ses.list_identities()
-                        verified_emails = response.get('Identities', [])
+                        # Auto-verify email for new orders
+                        ses.verify_email_identity(EmailAddress=email)
+                        print(f"Verification initiated for email: {email}")
                         
-                        if email not in verified_emails:
-                            # Auto-verify email for new orders
-                            ses.verify_email_identity(EmailAddress=email)
-                            print(f"Verification initiated for email: {email}")
-                        else:
-                            print(f"Email already verified: {email}")
-                            
+                        # Update order status to Email Verified
+                        orders_table.update_item(
+                            Key={'orderId': order_id},
+                            UpdateExpression='SET #status = :status, emailVerified = :verified',
+                            ExpressionAttributeNames={'#status': 'status'},
+                            ExpressionAttributeValues={
+                                ':status': 'Email Verified',
+                                ':verified': True
+                            }
+                        )
+                        print(f"Order {order_id} status updated to Email Verified")
+                        
                     except Exception as e:
                         print(f"Error verifying email {email}: {str(e)}")
+                        # Update status to indicate verification failed
+                        try:
+                            orders_table.update_item(
+                                Key={'orderId': order_id},
+                                UpdateExpression='SET #status = :status',
+                                ExpressionAttributeNames={'#status': 'status'},
+                                ExpressionAttributeValues={':status': 'Email Verification Failed'}
+                            )
+                        except Exception as update_error:
+                            print(f"Failed to update order status: {str(update_error)}")
                         
         return {'statusCode': 200}
         
